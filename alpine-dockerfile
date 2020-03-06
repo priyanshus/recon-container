@@ -1,0 +1,54 @@
+FROM golang:1.13-alpine3.10
+
+# Install bash
+RUN apk add --no-cache bash
+
+# Install python and pip
+RUN apk add --update py3-pip
+
+# upgrade pip
+RUN pip3 install --upgrade pip
+
+# Install git, curl, wget
+RUN apk add --no-cache git \
+&& apk add curl \
+&& apk add wget
+
+# Install NMAP
+RUN apk add nmap nmap-scripts && rm -rf /var/cache/apk/*
+
+# Install Amass
+RUN go get -v -u github.com/OWASP/Amass/v3/... \
+&& cd $GOPATH/src/github.com/OWASP/Amass \
+&& go install ./...
+
+## Install Go based tools
+RUN go get github.com/tomnomnom/waybackurls \
+&& go get -u github.com/tomnomnom/httprobe \
+&& go get -u github.com/tomnomnom/assetfinder \
+&& go get -u github.com/lc/gau \
+&& go get -u github.com/OJ/gobuster \
+&& go get -u github.com/michenriksen/aquatone
+
+# Install other tools in tools directory
+RUN mkdir tools \
+&& cd tools \
+&& git clone https://github.com/maurosoria/dirsearch.git \
+&& git clone https://github.com/aboul3la/Sublist3r.git \
+&& git clone https://github.com/danielmiessler/SecLists.git
+
+# Setup Sublist3r
+RUN cd tools/Sublist3r \
+&& pip3 install -r requirements.txt
+
+# Copy Files
+RUN mkdir utils
+COPY utils/check-url-status.py ./utils
+COPY utils/recon.sh ./utils
+COPY utils/.bashrc ./utils
+
+# Set the bash aliases
+RUN touch ~/.bashrc \
+&& cat utils/.bashrc > ~/.bashrc \
+&& rm utils/.bashrc \
+&& source ~/.bashrc

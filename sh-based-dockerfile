@@ -1,0 +1,6 @@
+FROM golang
+
+COPY setup.sh /tmp/
+RUN mkdir utils
+COPY utils/check-url-status.py ./utils
+COPY utils/recon.sh ./utils
